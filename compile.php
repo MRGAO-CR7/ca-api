@@ -28,26 +28,18 @@ try {
     // Create phar
     $phar = new Phar($pharFile);
 
-    // Start buffering. Mandatory to modify stub to add shebang
-    $phar->startBuffering();
+
+    // $phar->startBuffering();
 
     // Create the default stub from main.php entrypoint
-    $phar["Crypto.php"] = file_get_contents($srcRoot . "/tools/Crypto.php");
+    $phar["Crypto.php"] = file_get_contents($srcRoot . "/tools/ca/Crypto.php");
+    // // Set the default stub
     // $phar->setStub($phar->createDefaultStub("index.php"));
-
-    // // Create the default stub from main.php entrypoint
-    // $defaultStub = $phar->createDefaultStub('/public/index.php');
-
     // // Add the rest of the apps files
     // $phar->buildFromDirectory($srcRoot);
 
-    // // Customize the stub to add the shebang
-    // $stub = "#!/usr/bin/env php \n" . $defaultStub;
+    // $phar->stopBuffering();
 
-    // // Add the stub
-    // $phar->setStub($stub);
-
-    $phar->stopBuffering();
 
     // plus - compressing it into gzip  
     $phar->compressFiles(Phar::GZ);

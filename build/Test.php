@@ -1,8 +1,8 @@
 <?php
 
-include 'Crypto.php';
+include 'phar://'.__DIR__.'/ca-api.v0.0.1.phar/Crypto.php';
 
-$config = parse_ini_file(__DIR__ . '/../../resources/pkcs7.properties');
+$config = parse_ini_file(__DIR__.'/resources/pkcs7.properties');
 
 $cer = $config['PLATFORM_DECRYPTCER'];
 $pfx = $config['CLIENT_DECRYPTPFX'];
