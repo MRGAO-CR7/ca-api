@@ -1,7 +1,5 @@
 <?php
 
-namespace Tools\CA;
-
 /**
  * The Model to take the contents of the file and signs them using the certificate
  * and its matching private key specified by certificate and private_key parameters.
@@ -21,7 +19,8 @@ class Crypto
 	 * @return String 密文
 	 */
 	public static function encryptPkcs7Sign($cer, $pfx, $password, $plainText, &$signature) {
-        $path = __DIR__ . '/../../resources/';
+        // get the resources' path
+        $path = self::getPath() . 'resources/';
 
         // generate a signature
         $signature = self::generateSignature($pfx, $password, $plainText, $path);
@@ -54,8 +53,6 @@ class Crypto
 	 * @return String 明文
 	 */
 	public static function decryptPkcs7Check($cer, $pfx, $password, $cipherText, $signature) {
-        $path = __DIR__ . '/../../resources/';
-
         // base64 decode
         $c = base64_decode($cipherText);
         // get the length of the cipher
@@ -67,6 +64,8 @@ class Crypto
         // get the raw cipher text
         $rawCipherText = substr($c, $ivLen + $sha2len);
 
+        // get the resources' path
+        $path = self::getPath() . 'resources/';
         // get the content of the private key
         $privateKey = file_get_contents($path . $pfx);
         // decrypt the private key
@@ -107,17 +106,6 @@ class Crypto
     }
 
     /**
-	 * 解析配置文件并获取Key值
-     *
-	 * @param String $key 索引Key
-	 * @return String 索引Key值
-	 */
-    public static function getValue($key){
-        $ini_array = parse_ini_file(__DIR__ . '/../../resources/pkcs7.properties');
-        return $ini_array[$key] ?? false;
-    }
-
-    /**
 	 * 生成签名方法(正式)
      *
 	 * @param String $pfx 签名私钥证书
@@ -128,7 +116,8 @@ class Crypto
 	 * @return String 数字签名
 	 */
     public static function generateSignature($pfx, $password, $plaintext) {
-        $path = __DIR__ . '/../../resources/';
+        // get the resources' path
+        $path = self::getPath() . 'resources/';
 
         // get the content of the private key
         $privateKey = file_get_contents($path . $pfx);
@@ -145,22 +134,18 @@ class Crypto
         // base64 encode signature
         return base64_encode($signature);
     }
+
+    /**
+     * 获取当前工作目录
+     *
+     * @return String 当前路径
+     */
+    public static function getPath() {
+        $firstLetter = substr(__DIR__, 0, 1);
+        if ($firstLetter == '/') {
+            return __DIR__ . '/../../';
+        }
+        
+        return substr(__DIR__, 7, -18);
+    }
 }
-
-$cer = Crypto::getValue('PLATFORM_DECRYPTCER');
-$pfx = Crypto::getValue('CLIENT_DECRYPTPFX');
-$password = Crypto::getValue('CLIENT_DECRYPTPFX_KEY');
-
-$plainText = '刘德华';
-echo 'Plain Text: ' . $plainText . "\n";
-
-$signature = '';
-$cipherText = Crypto::encryptPkcs7Sign($cer, $pfx, $password, $plainText, $signature);
-echo "Cipher Text:" . $cipherText . "\n";
-
-$cer = Crypto::getValue('CLIENT_DECRYPTCER');
-$pfx = Crypto::getValue('PLATFORM_DECRYPTPFX');
-$password = Crypto::getValue('PLATFORM_DECRYPTPFX_KEY');
-
-$result = Crypto::decryptPkcs7Check($cer, $pfx, $password, $cipherText, $signature);
-echo "Plain Text:" . $result . "\n";
