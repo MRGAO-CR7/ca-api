@@ -18,7 +18,23 @@ class Crypto
      *
 	 * @return String 密文
 	 */
-	public static function encryptPkcs7Sign($cer, $pfx, $password, $plainText, &$signature) {
+	public static function encrypt7Sign($cer, $pfx, $password, $plainText, &$signature) {
+
+        if (empty($cer)) {
+            throw new Exception('公钥不能为空', 1101);
+        }
+        if (empty($pfx)) {
+            throw new Exception('私钥不能为空', 1101);
+        }
+        if (empty($password)) {
+            throw new Exception('私钥密码不能为空', 1101);
+        }
+        if (empty($plainText)) {
+            throw new Exception('待加密明文不能为空', 1101);
+        }
+
+
+
         // get the resources' path
         $path = self::getPath() . 'resources/';
 
@@ -27,6 +43,14 @@ class Crypto
 
         // get the content of the public key
         $publicKey = file_get_contents($path . $cer);
+
+        // replace all CRLF
+        $strKey = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
+        // check if the public key is in the trust list
+        if (!self::isTrusted($strKey)) {
+            throw new Exception('指定公钥不在信任范围内', 1102);
+        }
+
         // get the length of the cipher
         $ivLen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
         // generate a pseudo-random string of bytes
@@ -35,8 +59,7 @@ class Crypto
         $rawCipherText = openssl_encrypt($plainText, $cipher, $publicKey, $options = OPENSSL_RAW_DATA, $iv);
 
         // generate a keyed hash value using the HMAC method
-        $cert = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
-        $hmac = hash_hmac('sha256', $rawCipherText, $cert, $as_binary = true);
+        $hmac = hash_hmac('sha256', $rawCipherText, $strKey, $as_binary = true);
         
         // base64 encode
         return base64_encode($iv.$hmac.$rawCipherText);
@@ -52,7 +75,20 @@ class Crypto
      *
 	 * @return String 明文
 	 */
-	public static function decryptPkcs7Check($cer, $pfx, $password, $cipherText, $signature) {
+	public static function decrypt7Check($cer, $pfx, $password, $cipherText, $signature) {
+        // get the resources' path
+        $path = self::getPath() . 'resources/';
+
+        // get the content of the public key
+        $publicKey = file_get_contents($path . $cer);
+
+        // replace all CRLF
+        $strKey = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
+        // check if the public key is in the trust list
+        if (!self::isTrusted($strKey)) {
+            throw new Exception('指定公钥不在信任范围内', 1102);
+        }
+
         // base64 decode
         $c = base64_decode($cipherText);
         // get the length of the cipher
@@ -64,8 +100,6 @@ class Crypto
         // get the raw cipher text
         $rawCipherText = substr($c, $ivLen + $sha2len);
 
-        // get the resources' path
-        $path = self::getPath() . 'resources/';
         // get the content of the private key
         $privateKey = file_get_contents($path . $pfx);
         // decrypt the private key
@@ -74,16 +108,16 @@ class Crypto
         // decrypt the raw cipher text to get the plain text
         $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
 
-        // timing attack safe comparison
+        // replace all CRLF
         $cert = str_replace(array("\r", "\n", "\r\n"), '', $certs['cert']);
+
+        // timing attack safe comparison
         $calcMac = hash_hmac('sha256', $rawCipherText, $cert, $as_binary = true);
         if (!hash_equals($hmac, $calcMac))
         {
-            return 1113;
+            throw new Exception('解密过程中验证错误', 1113);
         }
 
-        // get the content of the public key
-        $publicKey = file_get_contents($path . $cer);
         // get the public key id
         $pubKeyId = openssl_pkey_get_public($publicKey);
         // base64 decode signature
@@ -99,9 +133,9 @@ class Crypto
         if ($result == 1) {
             return $plainText;
         } else if($result == 0) {
-            return 1111;
+            throw new Exception('证书签名验证错误(包括过期)', 1104);
         } else {
-            return 1111;
+            throw new Exception('证书签名错误', 1103);
         }
     }
 
@@ -147,5 +181,21 @@ class Crypto
         }
         
         return substr(__DIR__, 7, -18);
+    }
+
+    /**
+     * check if the public key is in the trust list
+     *
+     * @return Boolean true if the key is listed, otherwise false
+     */
+    public static function isTrusted($strKey) {
+        // get the resources' path
+        $trustFile = self::getPath() . 'resources/trust.txt';
+        // get the content of the trust file
+        $trust = file_get_contents($trustFile);
+        // replace all CRLF
+        $trust = str_replace(array("\r", "\n", "\r\n"), '', $trust);
+
+        return (strpos($trust, $strKey) === false) ? false : true;
     }
 }

@@ -12,14 +12,32 @@ $plainText = '刘德华';
 echo '明文: ' . $plainText . "\n\n";
 
 $signature = '';
-$cipherText = Crypto::encryptPkcs7Sign($cer, $pfx, $password, $plainText, $signature);
+try {
+    $cipherText = Crypto::encrypt7Sign($cer, $pfx, $password, $plainText, $signature);
+} catch (Exception $e) {
+    echo "加密过程中发生异常...\n";
+    echo $e->getCode() . "\n";
+    echo $e->getMessage() . "\n";
+
+    exit;
+}
+
 echo "加密后...\n";
-echo "密文: " . $cipherText . "\n";
+echo "密文: " . $cipherText . "\n\n";
 
 $cer = $config['CLIENT_DECRYPTCER'];
 $pfx = $config['PLATFORM_DECRYPTPFX'];
 $password = $config['PLATFORM_DECRYPTPFX_KEY'];
 
-$result = Crypto::decryptPkcs7Check($cer, $pfx, $password, $cipherText, $signature);
+try {
+    $result = Crypto::decrypt7Check($cer, $pfx, $password, $cipherText, $signature);
+} catch (Exception $e) {
+    echo "解密过程中发生异常...\n";
+    echo $e->getCode() . "\n";
+    echo $e->getMessage() . "\n";
+
+    exit;
+}
+
 echo "解密后...\n";
-echo "明文: " . $result . "\n";
+echo "明文: " . $result . "\n\n";
