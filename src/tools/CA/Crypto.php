@@ -19,6 +19,7 @@ class Crypto
 	 * @return String 密文
 	 */
 	public static function encrypt7Sign($cer, $pfx, $password, $plainText, &$signature) {
+        var_dump("Test encrypt7Sign start...");
 
         if (empty($cer)) {
             throw new Exception('公钥不能为空', 1101);
@@ -61,6 +62,8 @@ class Crypto
         // generate a keyed hash value using the HMAC method
         $hmac = hash_hmac('sha256', $rawCipherText, $strKey, $as_binary = true);
         
+        var_dump("Test encrypt7Sign end.");
+
         // base64 encode
         return base64_encode($iv.$hmac.$rawCipherText);
     }
@@ -76,6 +79,8 @@ class Crypto
 	 * @return String 明文
 	 */
 	public static function decrypt7Check($cer, $pfx, $password, $cipherText, $signature) {
+        var_dump("Test decrypt7Check start...");
+
         // get the resources' path
         $path = self::getPath() . 'resources/';
 
@@ -128,6 +133,8 @@ class Crypto
 
         // free the key from memory
         openssl_free_key($pubKeyId);
+
+        var_dump("Test decrypt7Check end.");
 
         // state whether signature is okay or not
         if ($result == 1) {
