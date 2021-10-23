@@ -1,6 +1,6 @@
 <?php
 
-include 'phar://'.__DIR__.'/ca-api.v0.0.1.phar/Crypto.php';
+include 'phar://'.__DIR__.'/ca-api.v1.0.0.phar/Crypto.php';
 
 $config = parse_ini_file(__DIR__.'/resources/pkcs7.properties');
 
