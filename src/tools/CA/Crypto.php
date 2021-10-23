@@ -54,15 +54,15 @@ class Crypto
         // 生成签名
         $signature = self::generateSignature($pfx, $password, $plainText, $path);
 
-        try {
-            // 获取暗码长度
-            $ivLen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
-            // 生成随机防伪字节串
-            $iv = openssl_random_pseudo_bytes($ivLen);
-            // 获取初始加密文本
-            $rawCipherText = openssl_encrypt($plainText, $cipher, $publicKey, $options = OPENSSL_RAW_DATA, $iv);
-        } catch (Exception $e) {
-            throw new Exception('加密错误('.openssl_error_string().')', 1110);
+        // 获取暗码长度
+        $ivLen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
+        // 生成随机防伪字节串
+        $iv = openssl_random_pseudo_bytes($ivLen);
+
+        // 获取初始加密文本
+        $rawCipherText = openssl_encrypt($plainText, $cipher, $publicKey, $options = OPENSSL_RAW_DATA, $iv);
+        if (!$rawCipherText) {
+            throw new Exception('加密失败', 1110);
         }
 
         // 使用HMAC方法生成密钥散列值
@@ -140,11 +140,10 @@ class Crypto
             throw new Exception('解密私钥失败('.openssl_error_string().')', 1110);
         }
 
-        try {
-            // 解密加密文本获取明文内容
-            $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
-        } catch (Exception $e) {
-            throw new Exception('解密私钥失败或者解密过程中发生异常('.openssl_error_string().')', 1111);
+        // 解密加密文本获取明文内容
+        $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
+        if (!$plainText) {
+            throw new Exception('解密失败('.openssl_error_string().')', 1111);
         }
 
         // 替换回车换行
@@ -208,11 +207,10 @@ class Crypto
         // 获取私钥ID
         $pKeyId = openssl_pkey_get_private($certs['pkey']);
 
-        try {
-            // 生成签名
-            openssl_sign($plaintext, $signature, $pKeyId, 'SHA256');
-        } catch (Exception $e) {
-            throw new Exception('解密私钥失败或者生成签名失败('.openssl_error_string().')', 1110);
+        // 生成签名
+        openssl_sign($plaintext, $signature, $pKeyId, 'SHA256');
+        if (empty($signature)) {
+            throw new Exception('生成签名失败', 1110);
         }
 
         // 释放私钥内存
