@@ -9,7 +9,7 @@ $pfx = $config['CLIENT_DECRYPTPFX'];
 $password = $config['CLIENT_DECRYPTPFX_KEY'];
 
 $plainText = '刘德华';
-echo '明文: ' . $plainText . "\n\n";
+echo '原文: ' . $plainText . "\n\n";
 
 $signature = '';
 try {
