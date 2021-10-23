@@ -53,12 +53,16 @@ class Crypto
         // 生成签名
         $signature = self::generateSignature($pfx, $password, $plainText, $path);
 
-        // 获取暗码长度
-        $ivLen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
-        // 生成随机防伪字节串
-        $iv = openssl_random_pseudo_bytes($ivLen);
-        // 获取初始加密文本
-        $rawCipherText = openssl_encrypt($plainText, $cipher, $publicKey, $options = OPENSSL_RAW_DATA, $iv);
+        try {
+            // 获取暗码长度
+            $ivLen = openssl_cipher_iv_length($cipher = "AES-128-CBC");
+            // 生成随机防伪字节串
+            $iv = openssl_random_pseudo_bytes($ivLen);
+            // 获取初始加密文本
+            $rawCipherText = openssl_encrypt($plainText, $cipher, $publicKey, $options = OPENSSL_RAW_DATA, $iv);
+        } catch (Exception $e) {
+            throw new Exception('加密错误('.openssl_error_string().')', 1110);
+        }
 
         // 使用HMAC方法生成密钥散列值
         $hmac = hash_hmac('sha256', $rawCipherText, $strKey, $as_binary = true);
@@ -74,6 +78,7 @@ class Crypto
 	 * @param String $pfx 解密私钥证书
 	 * @param String $password 解密私钥密码
 	 * @param String $cipherText 密文字节流
+	 * @param String $signature 签名字符串
      *
 	 * @return String 明文
 	 */
@@ -126,11 +131,14 @@ class Crypto
             throw new Exception('私钥证书读取失败', 1103);
         }
 
-        // 解密私钥
-        openssl_pkcs12_read($privateKey, $certs, $password);
-
-        // 解密加密文本获取明文内容
-        $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
+        try {
+            // 解密私钥
+            openssl_pkcs12_read($privateKey, $certs, $password);
+            // 解密加密文本获取明文内容
+            $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
+        } catch (Exception $e) {
+            throw new Exception('解密私钥失败或者解密过程中发生异常('.openssl_error_string().')', 1111);
+        }
 
         // 替换回车换行
         $cert = str_replace(array("\r", "\n", "\r\n"), '', $certs['cert']);
@@ -183,13 +191,16 @@ class Crypto
             throw new Exception('私钥证书读取失败', 1103);
         }
 
-        // 解密私钥
-        openssl_pkcs12_read($privateKey, $certs, $password);
-        // 获取私钥ID
-        $pKeyId = openssl_pkey_get_private($certs['pkey']);
-
-        // 生成签名
-        openssl_sign($plaintext, $signature, $pKeyId, 'SHA256');
+        try {
+            // 解密私钥
+            openssl_pkcs12_read($privateKey, $certs, $password);
+            // 获取私钥ID
+            $pKeyId = openssl_pkey_get_private($certs['pkey']);
+            // 生成签名
+            openssl_sign($plaintext, $signature, $pKeyId, 'SHA256');
+        } catch (Exception $e) {
+            throw new Exception('解密私钥失败或者生成签名失败('.openssl_error_string().')', 1110);
+        }
 
         // 释放私钥内存
         openssl_free_key($pKeyId);
