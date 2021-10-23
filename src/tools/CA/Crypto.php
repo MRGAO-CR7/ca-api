@@ -36,18 +36,19 @@ class Crypto
         // 获取资源文件路径
         $path = self::getPath() . 'resources/';
 
-        // 读取公钥内容
-        try {
-            $publicKey = file_get_contents($path . $cer);
-        } catch (Exception $e) {
-            throw new Exception('公钥证书读取失败', 1103);
+        // 判断文件是否存在
+        if (!file_exists($path . $cer)) {
+            throw new Exception('公钥证书文件不存在', 1103);
         }
+
+        // 读取公钥内容
+        $publicKey = file_get_contents($path . $cer);
 
         // 替换回车换行
         $strKey = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
         // 检查证书是否在信任链列表中
         if (!self::isTrusted($strKey)) {
-            throw new Exception('指定公钥不在信任范围内', 1102);
+            throw new Exception('指定公钥不在信任链列表中', 1102);
         }
 
         // 生成签名
@@ -99,18 +100,19 @@ class Crypto
         // 获取资源文件路径
         $path = self::getPath() . 'resources/';
 
-        // 读取公钥内容
-        try {
-            $publicKey = file_get_contents($path . $cer);
-        } catch (Exception $e) {
-            throw new Exception('公钥证书读取失败', 1103);
+        // 判断文件是否存在
+        if (!file_exists($path . $cer)) {
+            throw new Exception('公钥证书文件不存在', 1103);
         }
+
+        // 读取公钥内容
+        $publicKey = file_get_contents($path . $cer);
 
         // 替换回车换行
         $strKey = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
         // 检查公钥证书是否在信任链列表中
         if (!self::isTrusted($strKey)) {
-            throw new Exception('指定公钥不在信任范围内', 1102);
+            throw new Exception('指定公钥不在信任链列表中', 1102);
         }
 
         // base64解密
@@ -124,16 +126,21 @@ class Crypto
         // 读取初始加密文本
         $rawCipherText = substr($c, $ivLen + $sha2len);
 
+        // 判断文件是否存在
+        if (!file_exists($path . $pfx)) {
+            throw new Exception('私钥证书文件不存在', 1103);
+        }
+
         // 读取私钥内容
-        try {
-            $privateKey = file_get_contents($path . $pfx);
-        } catch (Exception $e) {
-            throw new Exception('私钥证书读取失败', 1103);
+        $privateKey = file_get_contents($path . $pfx);
+
+        // 解密私钥
+        openssl_pkcs12_read($privateKey, $certs, $password);
+        if (empty($certs)) {
+            throw new Exception('解密私钥失败('.openssl_error_string().')', 1110);
         }
 
         try {
-            // 解密私钥
-            openssl_pkcs12_read($privateKey, $certs, $password);
             // 解密加密文本获取明文内容
             $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
         } catch (Exception $e) {
@@ -184,18 +191,24 @@ class Crypto
         // 获取资源文件路径
         $path = self::getPath() . 'resources/';
 
-        // 读取私钥内容
-        try {
-            $privateKey = file_get_contents($path . $pfx);
-        } catch (Exception $e) {
-            throw new Exception('私钥证书读取失败', 1103);
+        // 判断文件是否存在
+        if (!file_exists($path . $pfx)) {
+            throw new Exception('私钥证书文件不存在', 1103);
         }
 
+        // 读取私钥内容
+        $privateKey = file_get_contents($path . $pfx);
+
+        // 解密私钥
+        openssl_pkcs12_read($privateKey, $certs, $password);
+        if (empty($certs)) {
+            throw new Exception('解密私钥失败('.openssl_error_string().')', 1110);
+        }
+
+        // 获取私钥ID
+        $pKeyId = openssl_pkey_get_private($certs['pkey']);
+
         try {
-            // 解密私钥
-            openssl_pkcs12_read($privateKey, $certs, $password);
-            // 获取私钥ID
-            $pKeyId = openssl_pkey_get_private($certs['pkey']);
             // 生成签名
             openssl_sign($plaintext, $signature, $pKeyId, 'SHA256');
         } catch (Exception $e) {
@@ -226,22 +239,24 @@ class Crypto
     /**
      * 检查公钥证书是否在信任链列表中
      *
-     * @return Boolean 证书可信任返回true, 否则返回false
+	 * @param String $pubKey 公钥
+     * @return Boolean 公钥证书可信任返回true, 否则返回false
      */
-    public static function isTrusted($strKey) {
+    public static function isTrusted($pubKey) {
         // 获取trust资源文件路径
         $trustFile = self::getPath() . 'resources/trust.txt';
 
-        // 读取trust文件内容
-        try {
-            $trust = file_get_contents($trustFile);
-        } catch (Exception $e) {
-            throw new Exception('Trust文件读取失败或者文件不存在', 1102);
+        // 判断文件是否存在
+        if (!file_exists($trustFile)) {
+            throw new Exception('信任链文件(trust.txt)不存在', 1102);
         }
+
+        // 读取trust文件内容
+        $trust = file_get_contents($trustFile);
 
         // 替换回车换行
         $trust = str_replace(array("\r", "\n", "\r\n"), '', $trust);
 
-        return (strpos($trust, $strKey) === false) ? false : true;
+        return (strpos($trust, $pubKey) === false) ? false : true;
     }
 }
