@@ -1,6 +1,6 @@
 <?php
 
-include 'phar://'.__DIR__.'/ca-api.v0.0.1.phar/Crypto.php';
+include 'phar://'.__DIR__.'/ca-api.v1.0.0.phar/Crypto.php';
 
 $config = parse_ini_file(__DIR__.'/resources/pkcs7.properties');
 
@@ -9,7 +9,7 @@ $pfx = $config['CLIENT_DECRYPTPFX'];
 $password = $config['CLIENT_DECRYPTPFX_KEY'];
 
 $plainText = '刘德华';
-echo '明文: ' . $plainText . "\n\n";
+echo '原文: ' . $plainText . "\n\n";
 
 $signature = '';
 try {

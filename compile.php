@@ -2,7 +2,7 @@
 
 try {
     // Generate a version
-    $version = 'v0.0.1';
+    $version = 'v1.0.0';
 
     // Get the current directory
     $curDir = getcwd();
