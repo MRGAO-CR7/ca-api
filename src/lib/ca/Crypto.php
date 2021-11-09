@@ -23,16 +23,16 @@ class Crypto
 	 */
 	public static function encrypt7Sign($cer, $pfx, $password, $plainText, &$signature) {
         if (empty($cer)) {
-            throw new Exception('公钥不能为空', 1101);
+            throw new \Exception('公钥不能为空', 1101);
         }
         if (empty($pfx)) {
-            throw new Exception('私钥不能为空', 1101);
+            throw new \Exception('私钥不能为空', 1101);
         }
         if (empty($password)) {
-            throw new Exception('私钥密码不能为空', 1101);
+            throw new \Exception('私钥密码不能为空', 1101);
         }
         if (empty($plainText)) {
-            throw new Exception('待加密明文不能为空', 1101);
+            throw new \Exception('待加密明文不能为空', 1101);
         }
 
         // 获取资源文件路径
@@ -40,7 +40,7 @@ class Crypto
 
         // 判断文件是否存在
         if (!file_exists($path . $cer)) {
-            throw new Exception('公钥证书文件不存在', 1103);
+            throw new \Exception('公钥证书文件不存在', 1103);
         }
 
         // 读取公钥内容
@@ -50,7 +50,7 @@ class Crypto
         $strKey = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
         // 检查证书是否在信任链列表中
         if (!self::isTrusted($strKey)) {
-            throw new Exception('指定公钥不在信任链列表中', 1102);
+            throw new \Exception('指定公钥不在信任链列表中', 1102);
         }
 
         // 生成签名
@@ -64,7 +64,7 @@ class Crypto
         // 获取初始加密文本
         $rawCipherText = openssl_encrypt($plainText, $cipher, $publicKey, $options = OPENSSL_RAW_DATA, $iv);
         if (!$rawCipherText) {
-            throw new Exception('加密失败', 1110);
+            throw new \Exception('加密失败', 1110);
         }
 
         // 使用HMAC方法生成密钥散列值
@@ -87,16 +87,16 @@ class Crypto
 	 */
 	public static function decrypt7Check($cer, $pfx, $password, $cipherText, $signature) {
         if (empty($cer)) {
-            throw new Exception('公钥不能为空', 1101);
+            throw new \Exception('公钥不能为空', 1101);
         }
         if (empty($pfx)) {
-            throw new Exception('私钥不能为空', 1101);
+            throw new \Exception('私钥不能为空', 1101);
         }
         if (empty($password)) {
-            throw new Exception('私钥密码不能为空', 1101);
+            throw new \Exception('私钥密码不能为空', 1101);
         }
         if (empty($cipherText)) {
-            throw new Exception('待解密文不能为空', 1101);
+            throw new \Exception('待解密文不能为空', 1101);
         }
 
         // 获取资源文件路径
@@ -104,7 +104,7 @@ class Crypto
 
         // 判断文件是否存在
         if (!file_exists($path . $cer)) {
-            throw new Exception('公钥证书文件不存在', 1103);
+            throw new \Exception('公钥证书文件不存在', 1103);
         }
 
         // 读取公钥内容
@@ -114,7 +114,7 @@ class Crypto
         $strKey = str_replace(array("\r", "\n", "\r\n"), '', $publicKey);
         // 检查公钥证书是否在信任链列表中
         if (!self::isTrusted($strKey)) {
-            throw new Exception('指定公钥不在信任链列表中', 1102);
+            throw new \Exception('指定公钥不在信任链列表中', 1102);
         }
 
         // base64解密
@@ -130,7 +130,7 @@ class Crypto
 
         // 判断文件是否存在
         if (!file_exists($path . $pfx)) {
-            throw new Exception('私钥证书文件不存在', 1103);
+            throw new \Exception('私钥证书文件不存在', 1103);
         }
 
         // 读取私钥内容
@@ -139,13 +139,13 @@ class Crypto
         // 解密私钥
         openssl_pkcs12_read($privateKey, $certs, $password);
         if (empty($certs)) {
-            throw new Exception('解密私钥失败('.openssl_error_string().')', 1110);
+            throw new \Exception('解密私钥失败('.openssl_error_string().')', 1110);
         }
 
         // 解密加密文本获取明文内容
         $plainText = openssl_decrypt($rawCipherText, $cipher, $certs['cert'], $options = OPENSSL_RAW_DATA, $iv);
         if (!$plainText) {
-            throw new Exception('解密失败('.openssl_error_string().')', 1111);
+            throw new \Exception('解密失败('.openssl_error_string().')', 1111);
         }
 
         // 替换回车换行
@@ -155,7 +155,7 @@ class Crypto
         $calcMac = hash_hmac('sha256', $rawCipherText, $cert, $as_binary = true);
         if (!hash_equals($hmac, $calcMac))
         {
-            throw new Exception('解密过程中验证错误', 1113);
+            throw new \Exception('解密过程中验证错误', 1113);
         }
 
         // 获取公钥ID
@@ -173,9 +173,9 @@ class Crypto
         if ($result == 1) {
             return $plainText;
         } else if($result == 0) {
-            throw new Exception('签名无效', 1112);
+            throw new \Exception('签名无效', 1112);
         } else {
-            throw new Exception('签名错误('.openssl_error_string().')', 1112);
+            throw new \Exception('签名错误('.openssl_error_string().')', 1112);
         }
     }
 
@@ -194,7 +194,7 @@ class Crypto
 
         // 判断文件是否存在
         if (!file_exists($path . $pfx)) {
-            throw new Exception('私钥证书文件不存在', 1103);
+            throw new \Exception('私钥证书文件不存在', 1103);
         }
 
         // 读取私钥内容
@@ -203,7 +203,7 @@ class Crypto
         // 解密私钥
         openssl_pkcs12_read($privateKey, $certs, $password);
         if (empty($certs)) {
-            throw new Exception('解密私钥失败('.openssl_error_string().')', 1110);
+            throw new \Exception('解密私钥失败('.openssl_error_string().')', 1110);
         }
 
         // 获取私钥ID
@@ -212,7 +212,7 @@ class Crypto
         // 生成签名
         openssl_sign($plaintext, $signature, $pKeyId, 'SHA256');
         if (empty($signature)) {
-            throw new Exception('生成签名失败', 1110);
+            throw new \Exception('生成签名失败', 1110);
         }
 
         // 释放私钥内存
@@ -248,7 +248,7 @@ class Crypto
 
         // 判断文件是否存在
         if (!file_exists($trustFile)) {
-            throw new Exception('信任链文件(trust.txt)不存在', 1102);
+            throw new \Exception('信任链文件(trust.txt)不存在', 1102);
         }
 
         // 读取trust文件内容

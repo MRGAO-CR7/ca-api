@@ -30,7 +30,7 @@ $signature = '';
 try {
     // 进行加密并取得签名
     $cipherText = \Lib\CA\Crypto::encrypt7Sign($cer, $pfx, $password, $plainText, $signature);
-} catch (Exception $e) {
+} catch (\Exception $e) {
     echo "加密过程中发生异常...\n";
     echo $e->getCode() . "\n";
     echo $e->getMessage() . "\n";
@@ -54,7 +54,7 @@ $password = $config['PLATFORM_DECRYPTPFX_KEY'];
 try {
     // 签证签名并解密
     $result = \Lib\CA\Crypto::decrypt7Check($cer, $pfx, $password, $cipherText, $signature);
-} catch (Exception $e) {
+} catch (\Exception $e) {
     echo "解密过程中发生异常...\n";
     echo $e->getCode() . "\n";
     echo $e->getMessage() . "\n";
