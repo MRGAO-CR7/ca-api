@@ -1,5 +1,7 @@
 <?php
 
+namespace Lib\CA;
+
 /**
  * The Model to take the contents of the file and signs them using the certificate
  * and its matching private key specified by certificate and private_key parameters.
